@@ -5,7 +5,6 @@ import { MediaCard, MediaCardSkeleton } from "./MediaCard";
 import { publicMediaApi, type PublicCatalogResponse, type PublicMediaType } from "../lib/media-api";
 
 const PAGE_SIZE = 12;
-const PAGINATION_SIBLINGS = 1;
 
 const buildPagination = (currentPage: number, totalPages: number) => {
   if (totalPages <= 5) {
@@ -20,25 +19,7 @@ const buildPagination = (currentPage: number, totalPages: number) => {
     return [1, "ellipsis", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
   }
 
-  const pages: Array<number | "ellipsis"> = [1];
-  const start = Math.max(2, currentPage - PAGINATION_SIBLINGS);
-  const end = Math.min(totalPages - 1, currentPage + PAGINATION_SIBLINGS);
-
-  if (start > 2) {
-    pages.push("ellipsis");
-  }
-
-  for (let page = start; page <= end; page += 1) {
-    pages.push(page);
-  }
-
-  if (end < totalPages - 1) {
-    pages.push("ellipsis");
-  }
-
-  pages.push(totalPages);
-
-  return pages;
+  return [1, "ellipsis", currentPage - 1, currentPage, currentPage + 1, "ellipsis", totalPages];
 };
 
 const CatalogGridSkeleton = () => (

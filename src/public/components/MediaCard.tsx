@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { PublicMedia } from "../lib/media-api";
 
 export const MediaCard = ({ movie, size = "md" }: { movie: PublicMedia; size?: "sm" | "md" }) => {
@@ -34,5 +35,25 @@ export const MediaCard = ({ movie, size = "md" }: { movie: PublicMedia; size?: "
         </div>
       </div>
     </Link>
+  );
+};
+
+export const MediaCardSkeleton = ({ size = "md" }: { size?: "sm" | "md" }) => {
+  const widthCls = size === "sm" ? "w-40 sm:w-44" : "w-full";
+
+  return (
+    <div className={`${widthCls} flex-shrink-0`}>
+      <div className="relative overflow-hidden rounded-xl bg-secondary/40 shadow-[var(--shadow-card)]">
+        <div className="relative aspect-[2/3] overflow-hidden">
+          <Skeleton className="h-full w-full rounded-none" />
+          <Skeleton className="absolute left-3 top-3 h-6 w-16 rounded-full" />
+          <Skeleton className="absolute right-3 top-3 h-6 w-12 rounded-full" />
+        </div>
+        <div className="space-y-2 p-3">
+          <Skeleton className="h-5 w-5/6" />
+          <Skeleton className="h-3 w-12" />
+        </div>
+      </div>
+    </div>
   );
 };

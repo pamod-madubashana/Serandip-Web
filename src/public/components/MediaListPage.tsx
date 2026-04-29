@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MediaCard } from "./MediaCard";
+import { MediaCard, MediaCardSkeleton } from "./MediaCard";
 import { publicMediaApi, type PublicCatalogResponse, type PublicMediaType } from "../lib/media-api";
 
 const PAGE_SIZE = 12;
-const PAGINATION_SIBLINGS = 0;
+const PAGINATION_SIBLINGS = 1;
 
 const buildPagination = (currentPage: number, totalPages: number) => {
   if (totalPages <= 5) {
@@ -13,11 +13,11 @@ const buildPagination = (currentPage: number, totalPages: number) => {
   }
 
   if (currentPage <= 3) {
-    return [1, 2, 3, "ellipsis", totalPages];
+    return [1, 2, 3, 4, 5, "ellipsis", totalPages];
   }
 
   if (currentPage >= totalPages - 2) {
-    return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
+    return [1, "ellipsis", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
   }
 
   const pages: Array<number | "ellipsis"> = [1];
@@ -44,11 +44,7 @@ const buildPagination = (currentPage: number, totalPages: number) => {
 const CatalogGridSkeleton = () => (
   <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
     {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-      <div key={index} className="space-y-3">
-        <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-1/2" />
-      </div>
+      <MediaCardSkeleton key={index} />
     ))}
   </div>
 );

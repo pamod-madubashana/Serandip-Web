@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Play, Download, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { APP_NAME } from "@/lib/app-config";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MediaCard } from "../components/MediaCard";
+import { MediaCard, MediaCardSkeleton } from "../components/MediaCard";
 import { publicMediaApi, type PublicMedia } from "../lib/media-api";
 
 const heroBackdrops = [
@@ -251,11 +251,7 @@ const RailSkeleton = ({ title }: { title: string }) => (
     </div>
     <div className="flex gap-5 overflow-hidden pb-4">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="min-w-0 flex-1 space-y-3">
-          <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
-        </div>
+        <MediaCardSkeleton key={index} size="sm" />
       ))}
     </div>
   </div>
@@ -264,11 +260,7 @@ const RailSkeleton = ({ title }: { title: string }) => (
 const FeaturedGridSkeleton = () => (
   <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
     {Array.from({ length: 12 }).map((_, index) => (
-      <div key={index} className="space-y-3">
-        <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-1/2" />
-      </div>
+      <MediaCardSkeleton key={index} />
     ))}
   </div>
 );

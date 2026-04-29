@@ -1,7 +1,70 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft, Star, Download, Play, Tv } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { publicMediaApi, type PublicMedia } from "../lib/media-api";
+
+const DetailsSkeleton = () => (
+  <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+    <Skeleton className="mb-6 h-5 w-36" />
+    <div className="mb-8 overflow-hidden rounded-2xl border border-border shadow-[var(--shadow-card)]">
+      <div className="relative h-72 sm:h-96">
+        <Skeleton className="h-full w-full rounded-none" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8">
+          <div className="flex items-end gap-4 sm:gap-6">
+            <Skeleton className="aspect-[2/3] w-28 rounded-xl sm:w-40" />
+            <div className="flex-1 space-y-3 pb-2">
+              <Skeleton className="h-9 w-2/3" />
+              <div className="flex flex-wrap gap-2">
+                <Skeleton className="h-6 w-16 rounded" />
+                <Skeleton className="h-6 w-14 rounded" />
+                <Skeleton className="h-6 w-20 rounded" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-5 w-14 rounded-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="mb-8 grid gap-6 lg:grid-cols-3">
+      <div className="public-glass-card rounded-2xl p-6 lg:col-span-2">
+        <Skeleton className="mb-4 h-6 w-32" />
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+      </div>
+      <div className="public-glass-card rounded-2xl p-6">
+        <Skeleton className="mb-4 h-6 w-24" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-4 w-full" />
+          ))}
+        </div>
+      </div>
+    </div>
+    <div className="public-glass-card rounded-2xl p-4 sm:p-6">
+      <Skeleton className="mb-5 h-7 w-44" />
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="rounded-xl border border-border p-4">
+            <Skeleton className="mb-3 h-5 w-28" />
+            <Skeleton className="mb-2 h-4 w-3/4" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-24 rounded-lg" />
+              <Skeleton className="h-10 w-28 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
 
 const MovieDetails = () => {
   const { id } = useParams();
@@ -46,7 +109,7 @@ const MovieDetails = () => {
   }, [id, mediaType]);
 
   if (loading) {
-    return <div className="mx-auto max-w-3xl px-4 py-24 text-center text-muted-foreground">Loading title details...</div>;
+    return <DetailsSkeleton />;
   }
 
   if (!movie) {

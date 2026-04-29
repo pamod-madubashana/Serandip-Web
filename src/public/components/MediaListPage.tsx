@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MediaCard } from "./MediaCard";
 import { publicMediaApi, type PublicCatalogResponse, type PublicMediaType } from "../lib/media-api";
 
@@ -39,6 +40,18 @@ const buildPagination = (currentPage: number, totalPages: number) => {
 
   return pages;
 };
+
+const CatalogGridSkeleton = () => (
+  <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+    {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+      <div key={index} className="space-y-3">
+        <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
+      </div>
+    ))}
+  </div>
+);
 
 export const MediaListPage = ({
   title,
@@ -123,9 +136,8 @@ export const MediaListPage = ({
       </div>
 
       {loading ? (
-        <div className="public-glass-card rounded-2xl py-20 text-center">
-          <h3 className="mb-2 text-lg font-semibold">Loading titles...</h3>
-          <p className="text-sm text-muted-foreground">Fetching the latest catalog from the server.</p>
+        <div className="public-glass-card rounded-2xl p-5 sm:p-6">
+          <CatalogGridSkeleton />
         </div>
       ) : error ? (
         <div className="public-glass-card rounded-2xl py-20 text-center">

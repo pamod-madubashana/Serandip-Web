@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Play, Download, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { APP_NAME } from "@/lib/app-config";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MediaCard } from "../components/MediaCard";
 import { publicMediaApi, type PublicMedia } from "../lib/media-api";
 
@@ -199,7 +200,7 @@ const Home = () => {
 
       <section className="container mx-auto px-4 py-16">
         {loading ? (
-          <div className="public-glass-card rounded-2xl py-16 text-center text-muted-foreground">Loading the latest movies...</div>
+          <RailSkeleton title="Trending This Week" />
         ) : error ? (
           <div className="public-glass-card rounded-2xl py-16 text-center text-muted-foreground">Could not load movies: {error}</div>
         ) : (
@@ -214,15 +215,21 @@ const Home = () => {
             View All <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {movies.slice(0, 12).map((m) => (
-            <MediaCard key={m.id} movie={m} />
-          ))}
-        </div>
+        {loading ? (
+          <FeaturedGridSkeleton />
+        ) : (
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {movies.slice(0, 12).map((m) => (
+              <MediaCard key={m.id} movie={m} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="container mx-auto px-4 pb-20">
-        {series.length > 0 ? (
+        {loading ? (
+          <RailSkeleton title="Popular Series" />
+        ) : series.length > 0 ? (
           <HorizontalRail id="series" items={series} />
         ) : (
           <div className="public-glass-card rounded-2xl py-16 text-center text-muted-foreground">No TV series are available yet.</div>
@@ -231,5 +238,39 @@ const Home = () => {
     </>
   );
 };
+
+const RailSkeleton = ({ title }: { title: string }) => (
+  <div className="relative">
+    <div className="mb-6 flex items-center justify-between">
+      <h2 className="text-2xl font-bold md:text-3xl">{title}</h2>
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-10 w-10 rounded-full" />
+        <Skeleton className="h-10 w-10 rounded-full" />
+        <Skeleton className="hidden h-5 w-20 rounded sm:block" />
+      </div>
+    </div>
+    <div className="flex gap-5 overflow-hidden pb-4">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="min-w-0 flex-1 space-y-3">
+          <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const FeaturedGridSkeleton = () => (
+  <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+    {Array.from({ length: 12 }).map((_, index) => (
+      <div key={index} className="space-y-3">
+        <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
+      </div>
+    ))}
+  </div>
+);
 
 export default Home;

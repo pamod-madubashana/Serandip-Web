@@ -4,11 +4,19 @@ import { MediaCard } from "./MediaCard";
 import { publicMediaApi, type PublicCatalogResponse, type PublicMediaType } from "../lib/media-api";
 
 const PAGE_SIZE = 12;
-const PAGINATION_SIBLINGS = 1;
+const PAGINATION_SIBLINGS = 0;
 
 const buildPagination = (currentPage: number, totalPages: number) => {
-  if (totalPages <= 7) {
+  if (totalPages <= 5) {
     return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  if (currentPage <= 3) {
+    return [1, 2, 3, "ellipsis", totalPages];
+  }
+
+  if (currentPage >= totalPages - 2) {
+    return [1, "ellipsis", totalPages - 2, totalPages - 1, totalPages];
   }
 
   const pages: Array<number | "ellipsis"> = [1];
@@ -138,11 +146,12 @@ export const MediaListPage = ({
           </div>
 
           {totalPages > 1 && (
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="mx-auto flex max-w-full items-center justify-center overflow-x-auto pb-2">
+              <div className="inline-flex min-w-max items-center gap-2 rounded-full border border-border bg-background/70 px-2 py-2 shadow-[var(--shadow-card)] backdrop-blur-sm">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="flex items-center gap-1 rounded-lg border border-border px-4 py-2 text-sm transition hover:bg-secondary/60 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1 rounded-full px-3 py-2 text-sm transition hover:bg-secondary/60 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" /> Prev
               </button>
@@ -152,7 +161,7 @@ export const MediaListPage = ({
                   return (
                     <span
                       key={`ellipsis-${index}`}
-                      className="flex min-w-[2.5rem] items-center justify-center px-1 py-2 text-sm text-muted-foreground"
+                      className="flex min-w-[2rem] items-center justify-center px-1 py-2 text-sm text-muted-foreground"
                     >
                       ...
                     </span>
@@ -165,10 +174,10 @@ export const MediaListPage = ({
                   <button
                     key={item}
                     onClick={() => setPage(item)}
-                    className={`min-w-[2.5rem] rounded-lg px-3 py-2 text-sm transition ${
+                    className={`min-w-[2rem] rounded-full px-3 py-2 text-sm transition ${
                       active
-                        ? "border border-primary bg-primary text-primary-foreground shadow-[var(--shadow-glow)]"
-                        : "border border-border hover:bg-secondary/60"
+                        ? "bg-primary text-primary-foreground shadow-[var(--shadow-glow)]"
+                        : "hover:bg-secondary/60"
                     }`}
                   >
                     {item}
@@ -179,10 +188,11 @@ export const MediaListPage = ({
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="flex items-center gap-1 rounded-lg border border-border px-4 py-2 text-sm transition hover:bg-secondary/60 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1 rounded-full px-3 py-2 text-sm transition hover:bg-secondary/60 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next <ChevronRight className="h-4 w-4" />
               </button>
+              </div>
             </div>
           )}
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Pause, Play, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
+import { ArrowLeft, Pause, Play, Volume2, VolumeX, Maximize, Minimize, SkipBack, SkipForward, LoaderCircle } from "lucide-react";
 import { publicMediaApi, type PublicMedia } from "../lib/media-api";
 
 const formatTime = (s: number) => {
@@ -26,6 +26,8 @@ const VideoPlayer = () => {
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
+  const [buffering, setBuffering] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +76,18 @@ const VideoPlayer = () => {
     };
   }, [playing]);
 
+  useEffect(() => {
+    const syncFullscreen = () => {
+      setIsFullscreen(document.fullscreenElement === wrapRef.current);
+    };
+
+    document.addEventListener("fullscreenchange", syncFullscreen);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreen);
+    };
+  }, []);
+
   const toggle = () => {
     const v = ref.current;
     if (!v) return;
@@ -86,7 +100,14 @@ const VideoPlayer = () => {
     if (v) v.currentTime = Math.max(0, Math.min(v.duration || 0, v.currentTime + delta));
   };
 
-  const goFullscreen = () => wrapRef.current?.requestFullscreen?.();
+  const toggleFullscreen = async () => {
+    if (document.fullscreenElement === wrapRef.current) {
+      await document.exitFullscreen?.();
+      return;
+    }
+
+    await wrapRef.current?.requestFullscreen?.();
+  };
 
   if (loading) {
     return <div className="mx-auto max-w-3xl px-4 py-24 text-center text-muted-foreground">Loading video...</div>;
@@ -122,10 +143,27 @@ const VideoPlayer = () => {
           src={`/api/watch/${id}`}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
+          onWaiting={() => setBuffering(true)}
+          onSeeking={() => setBuffering(true)}
+          onCanPlay={() => setBuffering(false)}
+          onPlaying={() => {
+            setPlaying(true);
+            setBuffering(false);
+          }}
+          onLoadedData={() => setBuffering(false)}
           onTimeUpdate={(e) => setTime((e.target as HTMLVideoElement).currentTime)}
           onLoadedMetadata={(e) => setDuration((e.target as HTMLVideoElement).duration)}
           onClick={toggle}
         />
+
+        {buffering && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/35">
+            <div className="flex items-center gap-3 rounded-full border border-white/15 bg-black/65 px-4 py-2 text-sm text-white shadow-[var(--shadow-card)] backdrop-blur-sm">
+              <LoaderCircle className="h-5 w-5 animate-spin" />
+              Buffering...
+            </div>
+          </div>
+        )}
 
         {!playing && (
           <button
@@ -184,8 +222,8 @@ const VideoPlayer = () => {
                 {formatTime(time)} / {formatTime(duration)}
               </span>
             </div>
-            <button onClick={goFullscreen} aria-label="Fullscreen" className="transition hover:text-primary">
-              <Maximize className="h-5 w-5" />
+            <button onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Fullscreen"} className="transition hover:text-primary">
+              {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
             </button>
           </div>
         </div>

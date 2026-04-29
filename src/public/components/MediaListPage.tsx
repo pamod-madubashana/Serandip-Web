@@ -1,29 +1,58 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { MediaCard } from "./MediaCard";
-import type { Movie } from "../data/movies";
+import { publicMediaApi, type PublicCatalogResponse, type PublicMediaType } from "../lib/media-api";
 
 const PAGE_SIZE = 12;
 
 export const MediaListPage = ({
   title,
   subtitle,
-  items,
+  mediaType,
 }: {
   title: string;
   subtitle: string;
-  items: Movie[];
+  mediaType: PublicMediaType;
 }) => {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [data, setData] = useState<PublicCatalogResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filtered = useMemo(
-    () => items.filter((m) => m.title.toLowerCase().includes(query.trim().toLowerCase())),
-    [items, query],
-  );
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    publicMediaApi
+      .catalog(mediaType, page, query, PAGE_SIZE)
+      .then((payload) => {
+        if (!cancelled) {
+          setData(payload);
+        }
+      })
+      .catch((err: Error) => {
+        if (!cancelled) {
+          setError(err.message);
+          setData(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mediaType, page, query]);
+
+  const items = data?.items ?? [];
+  const totalPages = Math.max(1, data?.total_pages ?? 1);
   const currentPage = Math.min(page, totalPages);
-  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const totalItems = data?.total_count ?? 0;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -57,7 +86,17 @@ export const MediaListPage = ({
         </div>
       </div>
 
-      {paged.length === 0 ? (
+      {loading ? (
+        <div className="public-glass-card rounded-2xl py-20 text-center">
+          <h3 className="mb-2 text-lg font-semibold">Loading titles...</h3>
+          <p className="text-sm text-muted-foreground">Fetching the latest catalog from the server.</p>
+        </div>
+      ) : error ? (
+        <div className="public-glass-card rounded-2xl py-20 text-center">
+          <h3 className="mb-2 text-lg font-semibold">Could not load the catalog</h3>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      ) : items.length === 0 ? (
         <div className="public-glass-card rounded-2xl py-20 text-center">
           <h3 className="mb-2 text-lg font-semibold">Nothing found</h3>
           <p className="text-sm text-muted-foreground">No titles match "{query}".</p>
@@ -65,7 +104,7 @@ export const MediaListPage = ({
       ) : (
         <>
           <div className="mb-10 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {paged.map((m) => (
+            {items.map((m) => (
               <MediaCard key={m.id} movie={m} />
             ))}
           </div>
@@ -107,7 +146,7 @@ export const MediaListPage = ({
           )}
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Showing {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length}
+            Showing {totalItems === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, totalItems)} of {totalItems}
           </p>
         </>
       )}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Pause, Play, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from "lucide-react";
-import { getMedia } from "../data/movies";
+import { publicMediaApi, type PublicMedia } from "../lib/media-api";
 
 const formatTime = (s: number) => {
   if (!isFinite(s)) return "0:00";
@@ -12,16 +12,52 @@ const formatTime = (s: number) => {
 
 const VideoPlayer = () => {
   const { id } = useParams();
-  const movieId = id?.split("-")[0];
-  const movie = movieId ? getMedia(movieId) : undefined;
+  const [searchParams] = useSearchParams();
+  const mediaId = searchParams.get("media");
+  const mediaType = (searchParams.get("type") === "tv" ? "tv" : "movie") as "movie" | "tv";
 
   const ref = useRef<HTMLVideoElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [movie, setMovie] = useState<PublicMedia | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!mediaId) {
+      setLoading(false);
+      setError("Missing media reference.");
+      return;
+    }
+
+    publicMediaApi
+      .details(mediaType, mediaId)
+      .then((payload) => {
+        if (!cancelled) {
+          setMovie(payload);
+        }
+      })
+      .catch((err: Error) => {
+        if (!cancelled) {
+          setError(err.message);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mediaId, mediaType]);
 
   useEffect(() => {
     let t: number | undefined;
@@ -52,10 +88,15 @@ const VideoPlayer = () => {
 
   const goFullscreen = () => wrapRef.current?.requestFullscreen?.();
 
-  if (!movie) {
+  if (loading) {
+    return <div className="mx-auto max-w-3xl px-4 py-24 text-center text-muted-foreground">Loading video...</div>;
+  }
+
+  if (!movie || !id) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center">
         <h1 className="mb-2 text-2xl font-bold">Video not available</h1>
+        <p className="mb-4 text-sm text-muted-foreground">{error ?? "The selected file could not be resolved."}</p>
         <Link to="/movies" className="text-primary hover:underline">Back to Movies</Link>
       </div>
     );
@@ -78,7 +119,7 @@ const VideoPlayer = () => {
           ref={ref}
           className="h-full w-full"
           poster={movie.backdrop}
-          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          src={`/api/watch/${id}`}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onTimeUpdate={(e) => setTime((e.target as HTMLVideoElement).currentTime)}
@@ -153,9 +194,9 @@ const VideoPlayer = () => {
       <div className="mt-6">
         <h1 className="text-2xl font-bold">{movie.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {movie.year} - {movie.genres.join(", ")} - {movie.rating.toFixed(1)}
+          {movie.year ?? "Unknown"} - {movie.genres.join(", ")} - {movie.rating.toFixed(1)}
         </p>
-        <p className="mt-4 max-w-3xl text-foreground/90">{movie.overview}</p>
+        <p className="mt-4 max-w-3xl text-foreground/90">{movie.overview || "No synopsis is available for this title."}</p>
       </div>
     </div>
   );

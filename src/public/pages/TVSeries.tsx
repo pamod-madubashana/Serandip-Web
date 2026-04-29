@@ -1,8 +1,7 @@
-import { SERIES } from "../data/movies";
 import { MediaListPage } from "../components/MediaListPage";
 
 const TVSeries = () => (
-  <MediaListPage title="TV Series" subtitle="Discover binge-worthy series across every genre" items={SERIES} />
+  <MediaListPage title="TV Series" subtitle="Discover TV series synced from your live backend catalog" mediaType="tv" />
 );
 
 export default TVSeries;

@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
-import type { Movie } from "../data/movies";
+import type { PublicMedia } from "../lib/media-api";
 
-export const MediaCard = ({ movie, size = "md" }: { movie: Movie; size?: "sm" | "md" }) => {
+export const MediaCard = ({ movie, size = "md" }: { movie: PublicMedia; size?: "sm" | "md" }) => {
   const widthCls = size === "sm" ? "w-40 sm:w-44" : "w-full";
 
   return (

@@ -1,22 +1,60 @@
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Star, Download, Play } from "lucide-react";
-import { getMedia } from "../data/movies";
-
-const FILES = [
-  { resolution: "2160p (4K HDR)", quality: "BluRay", codec: "HEVC", size: 18.4, parts: 1 },
-  { resolution: "1080p", quality: "WEB-DL", codec: "H.264", size: 4.2, parts: 1 },
-  { resolution: "720p", quality: "WEB-DL", codec: "H.264", size: 1.8, parts: 1 },
-];
+import { useEffect, useState } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { ArrowLeft, Star, Download, Play, Tv } from "lucide-react";
+import { publicMediaApi, type PublicMedia } from "../lib/media-api";
 
 const MovieDetails = () => {
   const { id } = useParams();
-  const movie = id ? getMedia(id) : undefined;
+  const location = useLocation();
+  const mediaType = location.pathname.startsWith("/series/") ? "tv" : "movie";
+  const [movie, setMovie] = useState<PublicMedia | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!id) {
+      setLoading(false);
+      setMovie(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    publicMediaApi
+      .details(mediaType, id)
+      .then((payload) => {
+        if (!cancelled) {
+          setMovie(payload);
+        }
+      })
+      .catch((err: Error) => {
+        if (!cancelled) {
+          setError(err.message);
+          setMovie(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, mediaType]);
+
+  if (loading) {
+    return <div className="mx-auto max-w-3xl px-4 py-24 text-center text-muted-foreground">Loading title details...</div>;
+  }
 
   if (!movie) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center">
         <h1 className="mb-2 text-2xl font-bold">Title not found</h1>
-        <Link to="/movies" className="text-primary hover:underline">Back to Movies</Link>
+        <p className="mb-4 text-sm text-muted-foreground">{error ?? "This title is missing from the live catalog."}</p>
+        <Link to={mediaType === "tv" ? "/tv-series" : "/movies"} className="text-primary hover:underline">Back to library</Link>
       </div>
     );
   }
@@ -70,52 +108,90 @@ const MovieDetails = () => {
       <div className="mb-8 grid gap-6 lg:grid-cols-3">
         <div className="public-glass-card rounded-2xl p-6 lg:col-span-2">
           <h2 className="mb-3 text-lg font-semibold">Synopsis</h2>
-          <p className="leading-relaxed text-muted-foreground">{movie.overview}</p>
+          <p className="leading-relaxed text-muted-foreground">{movie.overview || "No synopsis is available yet for this title."}</p>
         </div>
         <div className="public-glass-card rounded-2xl p-6">
           <h2 className="mb-4 text-lg font-semibold">Details</h2>
           <dl className="space-y-2 text-sm">
-            <div className="flex justify-between"><dt className="text-muted-foreground">Year</dt><dd>{movie.year}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted-foreground">Year</dt><dd>{movie.year ?? "Unknown"}</dd></div>
             <div className="flex justify-between"><dt className="text-muted-foreground">Rating</dt><dd>{movie.rating.toFixed(1)} / 10</dd></div>
             <div className="flex justify-between"><dt className="text-muted-foreground">Type</dt><dd className="capitalize">{movie.type}</dd></div>
             <div className="flex justify-between gap-3"><dt className="text-muted-foreground">Genres</dt><dd className="text-right">{movie.genres.join(", ")}</dd></div>
+            {movie.network ? <div className="flex justify-between"><dt className="text-muted-foreground">Network</dt><dd>{movie.network}</dd></div> : null}
           </dl>
         </div>
       </div>
 
       <div className="public-glass-card rounded-2xl p-4 sm:p-6">
-        <h2 className="mb-5 text-xl font-semibold">Available Files</h2>
-        <div className="space-y-5">
-          {FILES.map((f, idx) => (
-            <div key={f.resolution} className="overflow-hidden rounded-xl border border-border">
+        <h2 className="mb-5 text-xl font-semibold">{movie.type === "series" ? "Seasons & Episodes" : "Available Files"}</h2>
+        {movie.type === "series" ? (
+          <div className="space-y-5">
+            {(movie.seasons ?? []).map((season) => (
+              <div key={season.id} className="overflow-hidden rounded-xl border border-border">
+                <div className="flex items-center justify-between bg-secondary/60 px-4 py-2">
+                  <h3 className="font-medium">Season {season.number}</h3>
+                  <span className="text-xs text-muted-foreground">{season.episodes.length} episode(s)</span>
+                </div>
+                <div className="grid gap-3 p-4 md:grid-cols-2">
+                  {season.episodes.map((episode) => (
+                    <div key={episode.id} className="rounded-xl border border-border bg-secondary/30 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium">E{String(episode.number).padStart(2, "0")} - {episode.title}</p>
+                        <span className="text-[11px] text-muted-foreground">{episode.status}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {episode.runtime ? `${episode.runtime} min` : "Runtime unknown"} • {episode.variants} variant(s)
+                        {episode.air ? ` • ${episode.air}` : ""}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {(movie.seasons ?? []).length === 0 ? (
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 text-sm text-muted-foreground">
+                Episode metadata has not been synced yet for this series.
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {movie.files.map((f) => (
+              <div key={`${f.id}-${f.resolution}`} className="overflow-hidden rounded-xl border border-border">
               <div className="flex items-center justify-between bg-secondary/60 px-4 py-2">
                 <h3 className="font-medium">{f.resolution}</h3>
-                <span className="text-xs text-muted-foreground">{f.parts} part(s)</span>
+                <span className="text-xs text-muted-foreground">{f.source_count} source(s)</span>
               </div>
               <div className="grid items-center gap-4 p-4 sm:grid-cols-[1fr_auto]">
                 <div>
-                  <p className="mb-2 text-sm font-medium">{movie.title} ({movie.year}) {f.resolution.split(" ")[0]} {f.quality} {f.codec}</p>
+                  <p className="mb-2 text-sm font-medium">{movie.title} ({movie.year ?? "Unknown"}) {f.resolution} {f.quality ?? ""} {f.codec ?? ""}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="rounded border border-primary/30 bg-primary/15 px-2 py-0.5 text-xs text-primary">{f.quality}</span>
-                    <span className="rounded border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-400">{f.codec}</span>
-                    <span className="rounded bg-foreground/10 px-2 py-0.5 text-xs">{f.size.toFixed(2)} GB</span>
+                    {f.quality ? <span className="rounded border border-primary/30 bg-primary/15 px-2 py-0.5 text-xs text-primary">{f.quality}</span> : null}
+                    {f.codec ? <span className="rounded border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-400">{f.codec}</span> : null}
+                    <span className="rounded bg-foreground/10 px-2 py-0.5 text-xs">{f.size}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <Link
-                    to={`/watch/${movie.id}-${idx}`}
+                    to={`/watch/${f.id}?media=${movie.id}&type=${mediaType}`}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:bg-primary-glow"
                   >
                     <Play className="h-4 w-4 fill-current" /> Watch
                   </Link>
-                  <button className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-emerald-500">
+                  <a href={`/api${f.download_url}`} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-emerald-500">
                     <Download className="h-4 w-4" /> Download
-                  </button>
+                  </a>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+            {movie.files.length === 0 ? (
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 text-sm text-muted-foreground">
+                No files are available for streaming yet.
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );

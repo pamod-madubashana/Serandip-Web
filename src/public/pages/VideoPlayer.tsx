@@ -158,10 +158,7 @@ const VideoPlayer = () => {
 
         {buffering && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/35">
-            <div className="flex items-center gap-3 rounded-full border border-white/15 bg-black/65 px-4 py-2 text-sm text-white shadow-[var(--shadow-card)] backdrop-blur-sm">
-              <LoaderCircle className="h-5 w-5 animate-spin" />
-              Buffering...
-            </div>
+            <LoaderCircle className="h-14 w-14 animate-spin text-white drop-shadow-[0_0_18px_rgba(0,0,0,0.55)]" />
           </div>
         )}
 

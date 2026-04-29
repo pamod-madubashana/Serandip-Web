@@ -4,6 +4,33 @@ import { MediaCard } from "./MediaCard";
 import { publicMediaApi, type PublicCatalogResponse, type PublicMediaType } from "../lib/media-api";
 
 const PAGE_SIZE = 12;
+const PAGINATION_SIBLINGS = 1;
+
+const buildPagination = (currentPage: number, totalPages: number) => {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const pages: Array<number | "ellipsis"> = [1];
+  const start = Math.max(2, currentPage - PAGINATION_SIBLINGS);
+  const end = Math.min(totalPages - 1, currentPage + PAGINATION_SIBLINGS);
+
+  if (start > 2) {
+    pages.push("ellipsis");
+  }
+
+  for (let page = start; page <= end; page += 1) {
+    pages.push(page);
+  }
+
+  if (end < totalPages - 1) {
+    pages.push("ellipsis");
+  }
+
+  pages.push(totalPages);
+
+  return pages;
+};
 
 export const MediaListPage = ({
   title,
@@ -53,6 +80,7 @@ export const MediaListPage = ({
   const totalPages = Math.max(1, data?.total_pages ?? 1);
   const currentPage = Math.min(page, totalPages);
   const totalItems = data?.total_count ?? 0;
+  const paginationItems = buildPagination(currentPage, totalPages);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -118,23 +146,36 @@ export const MediaListPage = ({
               >
                 <ChevronLeft className="h-4 w-4" /> Prev
               </button>
-              {Array.from({ length: totalPages }).map((_, i) => {
-                const n = i + 1;
-                const active = n === currentPage;
+
+              {paginationItems.map((item, index) => {
+                if (item === "ellipsis") {
+                  return (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="flex min-w-[2.5rem] items-center justify-center px-1 py-2 text-sm text-muted-foreground"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+
+                const active = item === currentPage;
+
                 return (
                   <button
-                    key={n}
-                    onClick={() => setPage(n)}
+                    key={item}
+                    onClick={() => setPage(item)}
                     className={`min-w-[2.5rem] rounded-lg px-3 py-2 text-sm transition ${
                       active
                         ? "border border-primary bg-primary text-primary-foreground shadow-[var(--shadow-glow)]"
                         : "border border-border hover:bg-secondary/60"
                     }`}
                   >
-                    {n}
+                    {item}
                   </button>
                 );
               })}
+
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}

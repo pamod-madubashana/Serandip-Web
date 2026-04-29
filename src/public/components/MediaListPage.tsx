@@ -113,9 +113,12 @@ export const MediaListPage = ({
       </div>
 
       {loading ? (
-        <div className="public-glass-card rounded-2xl p-5 sm:p-6">
-          <CatalogGridSkeleton />
-        </div>
+        <>
+          <div className="mb-10">
+            <CatalogGridSkeleton />
+          </div>
+          {totalPages > 1 ? <div className="h-[4.5rem]" aria-hidden="true" /> : null}
+        </>
       ) : error ? (
         <div className="public-glass-card rounded-2xl py-20 text-center">
           <h3 className="mb-2 text-lg font-semibold">Could not load the catalog</h3>

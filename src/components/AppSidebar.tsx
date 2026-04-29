@@ -6,6 +6,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
+import { APP_NAME, APP_OWNER_LABEL } from "@/lib/app-config";
 
 const main = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
@@ -54,7 +55,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold tracking-tight">Cineplex</span>
+              <span className="text-sm font-semibold tracking-tight">{APP_NAME}</span>
               <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Admin CMS</span>
             </div>
           )}
@@ -91,7 +92,7 @@ export function AppSidebar() {
               <div className="h-7 w-7 rounded-full bg-gradient-primary" />
               <div className="min-w-0 flex-1 leading-tight">
                 <p className="truncate text-xs font-medium">Aria Vance</p>
-                <p className="truncate text-[10px] text-muted-foreground">Owner • aria@cineplex.io</p>
+                <p className="truncate text-[10px] text-muted-foreground">Owner • {APP_OWNER_LABEL}</p>
               </div>
               <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-glow" />
             </div>

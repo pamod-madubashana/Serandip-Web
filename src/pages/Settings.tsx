@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/PageHeader";
+import { APP_NAME } from "@/lib/app-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -13,7 +14,7 @@ export default function Settings() {
           <div className="mt-4 space-y-3">
             <div>
               <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Workspace name</label>
-              <Input defaultValue="Cineplex Vault" className="mt-1 bg-surface-2/60" />
+              <Input defaultValue={`${APP_NAME} Vault`} className="mt-1 bg-surface-2/60" />
             </div>
             <div>
               <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Default quality</label>

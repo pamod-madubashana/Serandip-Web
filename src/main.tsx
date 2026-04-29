@@ -1,6 +1,9 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { APP_NAME } from "./lib/app-config";
+
+document.title = `${APP_NAME} Admin`;
 
 const tg = window.Telegram?.WebApp;
 if (tg) {

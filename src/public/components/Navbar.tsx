@@ -1,6 +1,7 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Film, Home, Info, Tv, User, LogIn, LogOut, UserCircle2, LayoutDashboard } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { APP_NAME } from "@/lib/app-config";
 
 const NAV = [
   { to: "/", label: "Home", icon: Home },
@@ -9,7 +10,7 @@ const NAV = [
   { to: "/about", label: "About", icon: Info },
 ];
 
-export const Navbar = ({ appName = "Serandip Prime" }: { appName?: string }) => {
+export const Navbar = ({ appName = APP_NAME }: { appName?: string }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const location = useLocation();

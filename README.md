@@ -33,7 +33,7 @@ The dev server starts with Vite's default local URL output.
 
 - `src/` - app source code
 - `public/` - static assets copied by Vite
-- `dist/` - generated build output
+- `../Web/dist/` - generated build output when building from the main repo checkout
 
 ## Working from the main repo
 
@@ -44,3 +44,5 @@ If you cloned the main repository, initialize the frontend with:
 ```bash
 git submodule update --init --recursive
 ```
+
+When you run `npm run build` from this workspace inside the main repository, Vite writes the deployable files to `src/Web/dist/` so deployments do not need the frontend submodule checked out. In a standalone frontend checkout without `../Web/`, it falls back to the local `dist/` directory.

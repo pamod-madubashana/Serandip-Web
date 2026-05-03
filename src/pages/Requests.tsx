@@ -1,34 +1,75 @@
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { requests } from "@/lib/mock-data";
+import { dashboardApi, type DashboardRequests } from "@/lib/dashboard-api";
 import { Flame, ThumbsUp } from "lucide-react";
 
 const columns = ["Pending", "In Progress", "Fulfilled", "Rejected"] as const;
 
 export default function Requests() {
+  const [data, setData] = useState<DashboardRequests | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadRequests = async () => {
+      try {
+        const payload = await dashboardApi.requests();
+        if (!cancelled) {
+          setData(payload);
+          setError(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Could not load live request backlog data.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadRequests();
+    const interval = window.setInterval(() => {
+      void loadRequests();
+    }, 30000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  const items = data?.items ?? [];
+
   return (
     <div>
       <PageHeader
         title="Requests"
-        subtitle="Community-driven backlog with voting & fulfillment workflow."
+        subtitle={`${data?.total ?? 0} live queue items waiting for processing.`}
         actions={<Button size="sm" variant="outline">Export CSV</Button>}
       />
+
+      {error ? <div className="px-5 pt-4 text-sm text-destructive">{error}</div> : null}
 
       {/* Kanban */}
       <div className="grid gap-3 p-5 lg:grid-cols-4">
         {columns.map((col) => {
-          const items = requests.filter((r) => r.status === col);
+          const columnItems = items.filter((r) => r.status === col);
           return (
             <div key={col} className="card-elevated rounded-lg p-3">
               <div className="mb-2 flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                   <StatusBadge status={col} />
-                  <span className="text-[11px] text-muted-foreground">{items.length}</span>
+                  <span className="text-[11px] text-muted-foreground">{columnItems.length}</span>
                 </div>
               </div>
               <div className="space-y-2">
-                {items.map((r) => (
+                {columnItems.map((r) => (
                   <div key={r.id} className="rounded-md border border-border bg-surface-2/40 p-3 transition-smooth hover:border-primary/40">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-xs font-semibold leading-tight">{r.title}</p>
@@ -43,7 +84,7 @@ export default function Requests() {
                     </div>
                   </div>
                 ))}
-                {items.length === 0 && <p className="px-2 py-6 text-center text-[11px] text-muted-foreground">Empty</p>}
+                {columnItems.length === 0 && <p className="px-2 py-6 text-center text-[11px] text-muted-foreground">Empty</p>}
               </div>
             </div>
           );
@@ -60,7 +101,7 @@ export default function Requests() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {requests.map((r) => (
+              {items.map((r) => (
                 <tr key={r.id} className="transition-smooth hover:bg-surface-2/50 [&>td]:px-3 [&>td]:py-2">
                   <td className="font-medium">{r.title}</td>
                   <td><span className="rounded bg-surface-3 px-1.5 py-px font-mono">{r.type}</span></td>
@@ -70,6 +111,11 @@ export default function Requests() {
                   <td className="text-right text-muted-foreground">{r.date}</td>
                 </tr>
               ))}
+              {!loading && items.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No live request records are waiting in the queue.</td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>

@@ -9,25 +9,39 @@ export default function Episodes() {
   const [series, setSeries] = useState<DashboardSeries[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    setLoading(true);
-    dashboardApi.series()
-      .then((payload) => {
+    const loadEpisodes = async () => {
+      setLoading(true);
+      try {
+        const payload = await dashboardApi.series();
         if (!cancelled) {
           setSeries(payload.series);
+          setError(null);
         }
-      })
-      .finally(() => {
+      } catch {
+        if (!cancelled) {
+          setSeries([]);
+          setError("Could not load live episode inventory.");
+        }
+      } finally {
         if (!cancelled) {
           setLoading(false);
         }
-      });
+      }
+    };
+
+    void loadEpisodes();
+    const interval = window.setInterval(() => {
+      void loadEpisodes();
+    }, 30000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
     };
   }, []);
 
@@ -62,6 +76,7 @@ export default function Episodes() {
         title="Seasons & Episodes"
         subtitle={`${episodes.length} episodes across ${series.length} live series`}
       />
+      {error ? <div className="px-5 pt-4 text-sm text-destructive">{error}</div> : null}
       <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-3">
         <div className="relative w-full max-w-xs">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

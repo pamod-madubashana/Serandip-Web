@@ -9,9 +9,38 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Too
 export default function Overview() {
   const [data, setData] = useState<DashboardOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    dashboardApi.overview().then(setData).finally(() => setLoading(false));
+    let cancelled = false;
+
+    const loadOverview = async () => {
+      try {
+        const payload = await dashboardApi.overview();
+        if (!cancelled) {
+          setData(payload);
+          setError(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Could not load live dashboard overview data.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadOverview();
+    const interval = window.setInterval(() => {
+      void loadOverview();
+    }, 30000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
   }, []);
 
   const counts = data?.counts;
@@ -23,6 +52,8 @@ export default function Overview() {
         subtitle="Live library metrics and operational signals from your real database."
         actions={<Button size="sm" className="bg-gradient-primary text-primary-foreground">Live data</Button>}
       />
+
+      {error ? <div className="px-5 pt-4 text-sm text-destructive">{error}</div> : null}
 
       <div className="grid gap-4 p-5 lg:grid-cols-4">
         <StatCard label="Total Movies" value={loading ? "..." : String(counts?.movies ?? 0)} icon={Film} accent="primary" />
@@ -71,9 +102,17 @@ export default function Overview() {
                 <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
                   <div className="h-full bg-gradient-primary" style={{ width: `${source.used}%` }} />
                 </div>
-                <p className="mt-1 text-[10px] text-muted-foreground">{source.status} • {source.files} movies tracked</p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {source.status}
+                  {source.files != null ? ` • ${source.files} files tracked` : " • library coverage pending"}
+                </p>
               </div>
             ))}
+            {data?.sources.length ? null : (
+              <div className="rounded-md border border-dashed border-border bg-surface-2/20 p-3 text-xs text-muted-foreground">
+                No live bot workload data is available right now.
+              </div>
+            )}
             <div className="rounded-md border border-border bg-surface-2/40 p-3 text-xs text-muted-foreground">
               DB size: {data?.storage.storage_size_label ?? "0 B"} • Data: {data?.storage.data_size_label ?? "0 B"}
             </div>
@@ -89,8 +128,8 @@ export default function Overview() {
               <p className="text-xs text-muted-foreground">Sorted by newest database records</p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-            {(data?.recent_movies ?? []).map((movie) => (
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+              {(data?.recent_movies ?? []).map((movie) => (
               <div key={movie.id} className="group">
                 <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-border bg-surface-2">
                   <img src={movie.poster} alt={movie.title} loading="lazy" className="h-full w-full object-cover transition-smooth group-hover:scale-105" />
@@ -104,9 +143,14 @@ export default function Overview() {
                 <p className="mt-1.5 truncate text-xs font-medium">{movie.title}</p>
                 <p className="truncate text-[10px] text-muted-foreground">{movie.genre.join(" • ") || "No genres"}</p>
               </div>
-            ))}
+              ))}
+              {!loading && (data?.recent_movies.length ?? 0) === 0 ? (
+                <div className="col-span-full rounded-md border border-dashed border-border bg-surface-2/20 p-4 text-sm text-muted-foreground">
+                  No indexed movie records are available yet.
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
 
         <div className="card-elevated rounded-lg p-4">
           <div className="mb-3 flex items-center justify-between">
@@ -125,6 +169,9 @@ export default function Overview() {
                 <p className="text-[10px] text-muted-foreground">{item.when || "recently"}</p>
               </li>
             ))}
+            {!loading && (data?.activity.length ?? 0) === 0 ? (
+              <li className="text-xs text-muted-foreground">No recent indexed activity is available yet.</li>
+            ) : null}
           </ul>
         </div>
       </div>

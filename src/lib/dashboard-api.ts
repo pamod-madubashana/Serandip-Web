@@ -99,7 +99,7 @@ export type DashboardOverview = {
   recent_movies: DashboardMovie[];
   quality_distribution: { name: string; files: number }[];
   release_distribution: { label: string; count: number }[];
-  sources: { name: string; used: number; files: number; workload: number; status: string }[];
+  sources: { name: string; used: number; files?: number | null; workload: number; status: string }[];
   activity: { who: string; what: string; target: string; when: string }[];
 };
 

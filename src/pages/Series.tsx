@@ -20,11 +20,12 @@ export default function Series() {
   useEffect(() => {
     let cancelled = false;
 
-    setLoading(true);
-    setError(null);
+    const loadSeries = async () => {
+      setLoading(true);
+      setError(null);
 
-    dashboardApi.series(query)
-      .then((payload) => {
+      try {
+        const payload = await dashboardApi.series(query);
         if (cancelled) return;
         setSeries(payload.series);
         setActive((current) => {
@@ -33,22 +34,27 @@ export default function Series() {
           }
           return payload.series[0]?.id ?? null;
         });
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setSeries([]);
           setActive(null);
           setError("Could not load TV series from the live dashboard API.");
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           setLoading(false);
         }
-      });
+      }
+    };
+
+    void loadSeries();
+    const interval = window.setInterval(() => {
+      void loadSeries();
+    }, 30000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
     };
   }, [query]);
 
@@ -59,10 +65,12 @@ export default function Series() {
     }
 
     let cancelled = false;
-    setDetailsLoading(true);
 
-    dashboardApi.seriesDetails(active)
-      .then((payload) => {
+    const loadDetails = async () => {
+      setDetailsLoading(true);
+
+      try {
+        const payload = await dashboardApi.seriesDetails(active);
         if (cancelled) return;
         setDetails(payload);
         setOpenSeasons((current) => {
@@ -72,20 +80,25 @@ export default function Series() {
           const firstSeason = payload.seasons[0]?.id;
           return firstSeason ? { [firstSeason]: true } : {};
         });
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setDetails(null);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           setDetailsLoading(false);
         }
-      });
+      }
+    };
+
+    void loadDetails();
+    const interval = window.setInterval(() => {
+      void loadDetails();
+    }, 30000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
     };
   }, [active]);
 

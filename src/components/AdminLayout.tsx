@@ -17,6 +17,10 @@ export function AdminLayout() {
       try {
         const response = await fetch("/api/auth/me", {
           credentials: "include",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
           signal: controller.signal,
         });
 

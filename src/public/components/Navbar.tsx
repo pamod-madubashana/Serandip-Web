@@ -31,7 +31,13 @@ function usePublicAuth() {
 
     const loadAuth = async () => {
       try {
-        const response = await fetch("/api/auth/me", { credentials: "include" });
+        const response = await fetch("/api/auth/me", {
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
+        });
         if (!response.ok) {
           throw new Error("auth");
         }
@@ -83,6 +89,7 @@ export const Navbar = ({ appName = APP_NAME }: { appName?: string }) => {
       await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
+        cache: "no-store",
       });
     } finally {
       setAuth(signedOutState);

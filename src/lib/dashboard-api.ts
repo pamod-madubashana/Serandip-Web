@@ -131,7 +131,13 @@ export type DashboardRequests = {
 };
 
 async function api<T>(path: string): Promise<T> {
-  const response = await fetch(path, { credentials: "include" });
+  const response = await fetch(path, {
+    credentials: "include",
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
   }

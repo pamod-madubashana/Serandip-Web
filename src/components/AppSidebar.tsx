@@ -1,5 +1,6 @@
 import {
   LayoutDashboard, Film, Tv, Layers, Upload, Inbox, Users, BarChart3, Settings, Clapperboard,
+  type LucideIcon,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -30,7 +31,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
 
-  const item = (i: { title: string; url: string; icon: any }) => (
+  const item = (i: { title: string; url: string; icon: LucideIcon }) => (
     <SidebarMenuItem key={i.title}>
       <SidebarMenuButton asChild tooltip={i.title}>
         <NavLink
@@ -56,7 +57,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold tracking-tight">{APP_NAME}</span>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Admin CMS</span>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Media CMS</span>
             </div>
           )}
         </div>

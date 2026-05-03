@@ -3,7 +3,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { APP_NAME } from "./lib/app-config";
 
-document.title = `${APP_NAME} Admin`;
+document.title = `${APP_NAME} Dashboard`;
 
 const tg = window.Telegram?.WebApp;
 if (tg) {

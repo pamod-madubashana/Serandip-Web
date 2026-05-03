@@ -1,12 +1,17 @@
-import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { FormEvent, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const nextPath = useMemo(() => {
+    const next = searchParams.get("next") || "/dashboard";
+    return next.startsWith("/dashboard") ? next : "/dashboard";
+  }, [searchParams]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -26,7 +31,7 @@ const Login = () => {
         throw new Error(payload?.error || "Login failed");
       }
 
-      navigate("/dashboard");
+      navigate(nextPath, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

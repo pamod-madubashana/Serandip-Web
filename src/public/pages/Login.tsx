@@ -1,8 +1,10 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { refreshAuth, setSignedIn } = useAuth();
   const [searchParams] = useSearchParams();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +33,9 @@ const Login = () => {
         throw new Error(payload?.error || "Login failed");
       }
 
+      const payload = (await response.json().catch(() => null)) as { username?: string } | null;
+      setSignedIn(payload?.username ?? username);
+      void refreshAuth();
       navigate(nextPath, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");

@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Film, Home, Info, Tv, User, LogIn, LogOut, UserCircle2, LayoutDashboard } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { APP_NAME } from "@/lib/app-config";
+import { useAuth } from "@/lib/auth";
 
 const NAV = [
   { to: "/", label: "Home", icon: Home },
@@ -10,69 +11,12 @@ const NAV = [
   { to: "/about", label: "About", icon: Info },
 ];
 
-type AuthState = {
-  authenticated: boolean;
-  admin: boolean;
-  username: string | null;
-};
-
-const signedOutState: AuthState = {
-  authenticated: false,
-  admin: false,
-  username: null,
-};
-
-function usePublicAuth() {
-  const location = useLocation();
-  const [auth, setAuth] = useState<AuthState>(signedOutState);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadAuth = async () => {
-      try {
-        const response = await fetch("/api/auth/me", {
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("auth");
-        }
-
-        const payload = (await response.json()) as Partial<AuthState>;
-        if (!cancelled) {
-          setAuth({
-            authenticated: Boolean(payload.authenticated),
-            admin: Boolean(payload.admin),
-            username: payload.username ?? null,
-          });
-        }
-      } catch {
-        if (!cancelled) {
-          setAuth(signedOutState);
-        }
-      }
-    };
-
-    void loadAuth();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [location.pathname]);
-
-  return { auth, setAuth };
-}
-
 export const Navbar = ({ appName = APP_NAME }: { appName?: string }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { auth, setAuth } = usePublicAuth();
+  const { auth, setSignedOut } = useAuth();
 
   useEffect(() => setOpen(false), [location.pathname]);
 
@@ -92,7 +36,7 @@ export const Navbar = ({ appName = APP_NAME }: { appName?: string }) => {
         cache: "no-store",
       });
     } finally {
-      setAuth(signedOutState);
+      setSignedOut();
       setOpen(false);
       navigate("/", { replace: true });
     }
@@ -173,7 +117,7 @@ export const Navbar = ({ appName = APP_NAME }: { appName?: string }) => {
 };
 
 export const MobileBottomNav = () => {
-  const { auth } = usePublicAuth();
+  const { auth } = useAuth();
 
   return (
     <nav className="public-glass fixed bottom-0 left-0 right-0 z-50 flex justify-around px-4 py-2 md:hidden">

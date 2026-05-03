@@ -1,55 +1,14 @@
-import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useAuth } from "@/lib/auth";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
 
-type AuthState = "checking" | "allowed" | "denied";
-
 export function AdminLayout() {
   const location = useLocation();
-  const [authState, setAuthState] = useState<AuthState>("checking");
+  const { auth } = useAuth();
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const checkAuth = async () => {
-      try {
-        const response = await fetch("/api/auth/me", {
-          credentials: "include",
-          cache: "no-store",
-          headers: {
-            Accept: "application/json",
-          },
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          setAuthState("denied");
-          return;
-        }
-
-        const payload = (await response.json()) as {
-          authenticated?: boolean;
-          admin?: boolean;
-        };
-
-        setAuthState(payload.authenticated && payload.admin ? "allowed" : "denied");
-      } catch {
-        if (controller.signal.aborted) {
-          return;
-        }
-        setAuthState("denied");
-      }
-    };
-
-    setAuthState("checking");
-    void checkAuth();
-
-    return () => controller.abort();
-  }, [location.pathname]);
-
-  if (authState === "checking") {
+  if (auth.loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
         <div className="text-center">
@@ -60,7 +19,7 @@ export function AdminLayout() {
     );
   }
 
-  if (authState === "denied") {
+  if (!auth.authenticated || !auth.admin) {
     const next = `${location.pathname}${location.search}${location.hash}`;
     return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace />;
   }

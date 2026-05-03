@@ -22,43 +22,46 @@ import PublicVideoPlayer from "./public/pages/VideoPlayer";
 import PublicLogin from "./public/pages/Login";
 import PublicAbout from "./public/pages/About";
 import NotFound from "./pages/NotFound.tsx";
+import { AuthProvider } from "./lib/auth";
 import "./public/public.css";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<PublicLayout />}>
-            <Route path="/" element={<PublicHome />} />
-            <Route path="/movies" element={<PublicMovies />} />
-            <Route path="/tv-series" element={<PublicTVSeries />} />
-            <Route path="/movie/:id" element={<PublicMovieDetails />} />
-            <Route path="/series/:id" element={<PublicMovieDetails />} />
-            <Route path="/watch/:id" element={<PublicVideoPlayer />} />
-            <Route path="/login" element={<PublicLogin />} />
-            <Route path="/about" element={<PublicAbout />} />
-          </Route>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<PublicHome />} />
+              <Route path="/movies" element={<PublicMovies />} />
+              <Route path="/tv-series" element={<PublicTVSeries />} />
+              <Route path="/movie/:id" element={<PublicMovieDetails />} />
+              <Route path="/series/:id" element={<PublicMovieDetails />} />
+              <Route path="/watch/:id" element={<PublicVideoPlayer />} />
+              <Route path="/login" element={<PublicLogin />} />
+              <Route path="/about" element={<PublicAbout />} />
+            </Route>
 
-          <Route element={<AdminLayout />}>
-            <Route path="/dashboard" element={<Overview />} />
-            <Route path="/dashboard/movies" element={<Movies />} />
-            <Route path="/dashboard/series" element={<Series />} />
-            <Route path="/dashboard/episodes" element={<Episodes />} />
-            <Route path="/dashboard/sources" element={<Sources />} />
-            <Route path="/dashboard/requests" element={<Requests />} />
-            <Route path="/dashboard/users" element={<Users />} />
-            <Route path="/dashboard/analytics" element={<Analytics />} />
-            <Route path="/dashboard/settings" element={<Settings />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route element={<AdminLayout />}>
+              <Route path="/dashboard" element={<Overview />} />
+              <Route path="/dashboard/movies" element={<Movies />} />
+              <Route path="/dashboard/series" element={<Series />} />
+              <Route path="/dashboard/episodes" element={<Episodes />} />
+              <Route path="/dashboard/sources" element={<Sources />} />
+              <Route path="/dashboard/requests" element={<Requests />} />
+              <Route path="/dashboard/users" element={<Users />} />
+              <Route path="/dashboard/analytics" element={<Analytics />} />
+              <Route path="/dashboard/settings" element={<Settings />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

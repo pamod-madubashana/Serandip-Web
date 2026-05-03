@@ -29,26 +29,54 @@ export type DashboardMovie = {
 
 export type DashboardSeries = {
   id: string;
+  tmdb_id?: string;
   title: string;
+  normalized_title?: string;
   year: number | null;
   network: string;
   poster: string;
+  backdrop?: string;
   status: string;
   genre: string[];
+  rating?: number;
+  first_air_date?: string;
+  last_air_date?: string;
+  added?: string;
   seasons: {
     id: string;
     number: number;
+    episode_total?: number;
     episodes: {
       id: string;
       number: number;
       title: string;
       runtime: number;
       variants: number;
+      source_count?: number;
       status: string;
       air: string;
+      files?: {
+        id: string;
+        display_name: string;
+        quality: string | null;
+        codec: string | null;
+        size: string;
+        size_mb: number;
+        source_count: number;
+        file_data: {
+          chat_id: number | null;
+          message_id: number | null;
+          filename: string | null;
+          unique_id: string | null;
+        }[];
+      }[];
     }[];
   }[];
   episode_count: number;
+  total_seasons?: number;
+  total_episodes?: number;
+  total_variants?: number;
+  total_sources?: number;
 };
 
 export type DashboardOverview = {
@@ -114,7 +142,8 @@ export const dashboardApi = {
   overview: () => api<DashboardOverview>("/api/dashboard/overview"),
   movies: (search = "") => api<{ movies: DashboardMovie[]; total: number }>(`/api/dashboard/movies${search ? `?search=${encodeURIComponent(search)}` : ""}`),
   movie: (id: string) => api<DashboardMovie>(`/api/dashboard/movies/${id}`),
-  series: () => api<{ series: DashboardSeries[]; total: number }>("/api/dashboard/series"),
+  series: (search = "") => api<{ series: DashboardSeries[]; total: number }>(`/api/dashboard/series${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+  seriesDetails: (id: string) => api<DashboardSeries>(`/api/dashboard/series/${id}`),
   users: () => api<DashboardUsers>("/api/dashboard/users"),
   requests: () => api<DashboardRequests>("/api/dashboard/requests"),
 };

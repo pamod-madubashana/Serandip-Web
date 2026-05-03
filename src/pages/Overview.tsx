@@ -3,8 +3,40 @@ import { Film, Tv, Layers, Inbox, HardDrive, Database, Activity } from "lucide-r
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { dashboardApi, type DashboardOverview } from "@/lib/dashboard-api";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+const chartTooltipStyle = {
+  background: "hsl(var(--popover) / 0.94)",
+  border: "1px solid hsl(var(--primary) / 0.24)",
+  borderRadius: 14,
+  fontSize: 12,
+  boxShadow: "0 24px 80px rgba(0, 0, 0, 0.32)",
+};
+
+function ChartLoadingSkeleton({ variant }: { variant: "bars" | "area" }) {
+  const columns = variant === "bars"
+    ? [18, 24, 30, 26, 44, 34, 52, 48, 64, 56, 72, 62]
+    : [24, 28, 34, 30, 42, 38, 54, 46, 58, 50, 66, 60];
+
+  return (
+    <div className="relative h-64 overflow-hidden rounded-xl border border-border/70 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.10),transparent_42%),linear-gradient(180deg,hsl(var(--surface-2)/0.92),hsl(var(--surface-2)/0.55))] p-4">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.18)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.18)_1px,transparent_1px)] bg-[size:44px_44px] opacity-50" />
+      <div className="relative flex h-full items-end gap-2 rounded-lg px-3 pb-6 pt-10">
+        {columns.map((height, index) => (
+          <div key={`${variant}-${height}-${index}`} className="flex flex-1 flex-col justify-end gap-2">
+            <Skeleton
+              className="w-full rounded-[10px] bg-gradient-to-t from-primary/55 via-primary/25 to-primary/10 shadow-[0_0_24px_hsl(var(--primary)/0.12)]"
+              style={{ height: `${height}%`, animationDelay: `${index * 70}ms` }}
+            />
+            <Skeleton className="mx-auto h-2 w-7 rounded-full bg-muted/60" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Overview() {
   const [data, setData] = useState<DashboardOverview | null>(null);
@@ -63,7 +95,7 @@ export default function Overview() {
       </div>
 
       <div className="grid gap-4 px-5 pb-5 lg:grid-cols-3">
-        <div className="card-elevated rounded-lg p-4 lg:col-span-2">
+        <div className="card-elevated rounded-lg border border-border/70 p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-[0_24px_70px_rgba(0,0,0,0.28)] lg:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold">Library by Release Year</h3>
@@ -71,20 +103,24 @@ export default function Overview() {
             </div>
             <Database className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data?.release_distribution ?? []} margin={{ top: 10, right: 6, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {loading ? (
+            <ChartLoadingSkeleton variant="bars" />
+          ) : (
+            <div className="h-64 rounded-xl border border-border/40 bg-[linear-gradient(180deg,hsl(var(--surface-2)/0.36),transparent)] px-2 pt-3 transition-all duration-300 hover:border-primary/20 hover:bg-[linear-gradient(180deg,hsl(var(--surface-2)/0.55),transparent)]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data?.release_distribution ?? []} margin={{ top: 10, right: 10, left: -14, bottom: 0 }} barCategoryGap="18%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.7)" vertical={false} />
+                  <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{ fill: "hsl(var(--primary) / 0.08)" }} contentStyle={chartTooltipStyle} labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, marginBottom: 4 }} />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 2, 2]} activeBar={{ fill: "hsl(var(--primary-glow))", stroke: "hsl(var(--primary) / 0.42)", strokeWidth: 1 }} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
-        <div className="card-elevated rounded-lg p-4">
+        <div className="card-elevated rounded-lg border border-border/70 p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold">Storage / Sources</h3>
@@ -177,19 +213,29 @@ export default function Overview() {
       </div>
 
       <div className="grid gap-4 px-5 pb-8 md:grid-cols-2">
-        <div className="card-elevated rounded-lg p-4">
+        <div className="card-elevated rounded-lg border border-border/70 p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
           <h3 className="mb-3 text-sm font-semibold">Quality Distribution</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data?.quality_distribution ?? []} margin={{ top: 10, right: 6, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-                <Area type="monotone" dataKey="files" stroke="hsl(var(--accent))" strokeWidth={2} fill="hsl(var(--accent) / 0.2)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          {loading ? (
+            <ChartLoadingSkeleton variant="area" />
+          ) : (
+            <div className="h-64 rounded-xl border border-border/40 bg-[linear-gradient(180deg,hsl(var(--surface-2)/0.36),transparent)] px-2 pt-3 transition-all duration-300 hover:border-accent/30 hover:bg-[linear-gradient(180deg,hsl(var(--surface-2)/0.55),transparent)]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data?.quality_distribution ?? []} margin={{ top: 10, right: 10, left: -14, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="overviewAreaFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.45} />
+                      <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0.03} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.7)" vertical={false} />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip cursor={{ stroke: "hsl(var(--accent) / 0.35)", strokeWidth: 1, strokeDasharray: "4 4" }} contentStyle={chartTooltipStyle} labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, marginBottom: 4 }} />
+                  <Area type="monotone" dataKey="files" stroke="hsl(var(--accent))" strokeWidth={3} fill="url(#overviewAreaFill)" activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", fill: "hsl(var(--accent))" }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
         <div className="card-elevated rounded-lg p-4">
           <p className="text-xs text-muted-foreground">Tracked users</p>

@@ -14,6 +14,8 @@ type AuthContextValue = {
   setSignedIn: (username: string | null) => void;
 };
 
+const AUTH_STORAGE_KEY = "serandip-dashboard-auth";
+
 const signedOutState: AuthState = {
   authenticated: false,
   admin: false,
@@ -21,10 +23,37 @@ const signedOutState: AuthState = {
   loading: false,
 };
 
-const initialState: AuthState = {
-  ...signedOutState,
-  loading: true,
-};
+function readStoredAuth(): Omit<AuthState, "loading"> | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<AuthState>;
+    if (!parsed.authenticated || !parsed.admin) {
+      return null;
+    }
+
+    return {
+      authenticated: true,
+      admin: true,
+      username: parsed.username ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+const storedAuth = readStoredAuth();
+
+const initialState: AuthState = storedAuth
+  ? { ...storedAuth, loading: false }
+  : { ...signedOutState, loading: true };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -64,6 +93,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refreshAuth();
   }, [refreshAuth]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (auth.authenticated && auth.admin) {
+      window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
+        authenticated: true,
+        admin: true,
+        username: auth.username,
+      }));
+      return;
+    }
+
+    window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
+  }, [auth.admin, auth.authenticated, auth.username]);
 
   useEffect(() => {
     const handleFocus = () => {

@@ -3,9 +3,87 @@ import { ChevronDown, Plus, Search, Star, Tv } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { dashboardApi, type DashboardSeries } from "@/lib/dashboard-api";
 import { cn } from "@/lib/utils";
+
+function SeriesSidebarSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 7 }).map((_, index) => (
+        <li key={`series-sidebar-skeleton-${index}`}>
+          <div className="flex items-center gap-2.5 px-3 py-2.5">
+            <Skeleton className="h-11 w-8 rounded border border-border/60" style={{ animationDelay: `${index * 45}ms` }} />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-3 w-32 rounded-full" />
+              <Skeleton className="h-2.5 w-24 rounded-full bg-muted/70" />
+            </div>
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </div>
+        </li>
+      ))}
+    </>
+  );
+}
+
+function SeriesDetailSkeleton() {
+  return (
+    <>
+      <div className="relative h-44 overflow-hidden border-b border-border bg-[linear-gradient(135deg,hsl(var(--primary)/0.12),transparent_48%),linear-gradient(180deg,hsl(var(--surface-2)/0.82),transparent)]">
+        <div className="absolute inset-0 flex items-end gap-4 p-5">
+          <Skeleton className="h-28 w-20 rounded-md border border-border/60" />
+          <div className="min-w-0 flex-1 space-y-3">
+            <div className="flex gap-2"><Skeleton className="h-4 w-20 rounded-full" /><Skeleton className="h-4 w-14 rounded-full" /><Skeleton className="h-4 w-16 rounded-full" /></div>
+            <Skeleton className="h-6 w-48 rounded-full" />
+            <Skeleton className="h-3 w-40 rounded-full bg-muted/70" />
+            <Skeleton className="h-3 w-56 rounded-full bg-muted/70" />
+          </div>
+          <div className="ml-auto flex gap-2">
+            <Skeleton className="h-9 w-24 rounded-md" />
+            <Skeleton className="h-9 w-28 rounded-md" />
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3 p-5">
+        {Array.from({ length: 3 }).map((_, seasonIndex) => (
+          <div key={`season-skeleton-${seasonIndex}`} className="card-elevated rounded-lg border border-border/70 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-4 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24 rounded-full" />
+                  <Skeleton className="h-3 w-16 rounded-full bg-muted/70" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-8 w-16 rounded-md" />
+                <Skeleton className="h-8 w-20 rounded-md" />
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2 xl:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, episodeIndex) => (
+                <div key={`episode-card-skeleton-${seasonIndex}-${episodeIndex}`} className="rounded-md border border-border/60 bg-surface-2/30 p-3">
+                  <div className="flex items-start gap-3">
+                    <Skeleton className="h-9 w-9 rounded-md" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-28 rounded-full" />
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </div>
+                      <Skeleton className="h-3 w-48 rounded-full bg-muted/70" />
+                      <Skeleton className="h-9 w-full rounded-md bg-background/50" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
 
 export default function Series() {
   const [query, setQuery] = useState("");
@@ -139,7 +217,7 @@ export default function Series() {
           <aside className="border-b border-border lg:border-b-0 lg:border-r">
             <div className="px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Series</div>
             <ul className="max-h-[72vh] overflow-y-auto scrollbar-thin pb-3">
-              {series.map((item) => (
+              {loading ? <SeriesSidebarSkeleton /> : series.map((item) => (
                 <li key={item.id}>
                   <button
                     onClick={() => setActive(item.id)}
@@ -168,7 +246,9 @@ export default function Series() {
           </aside>
 
           <section>
-            {!current ? (
+            {loading ? (
+              <SeriesDetailSkeleton />
+            ) : !current ? (
               <div className="px-5 py-8 text-sm text-muted-foreground">Select a series to inspect seasons, episodes, and synced variants.</div>
             ) : (
               <>

@@ -3,12 +3,77 @@ import { Filter, Grid3x3, Plus, Rows3, Search, Star, Tag } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/StatusBadge";
 import { MovieDetailDrawer } from "@/components/MovieDetailDrawer";
 import { dashboardApi, type DashboardMovie } from "@/lib/dashboard-api";
 import { cn } from "@/lib/utils";
 
 const filterChips = ["All", "Published", "Draft", "2160p", "1080p", "720p"];
+
+function MovieGridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+      {Array.from({ length: 12 }).map((_, index) => (
+        <div key={`movie-skeleton-${index}`} className="group rounded-xl border border-border/70 bg-[linear-gradient(180deg,hsl(var(--surface-2)/0.55),transparent)] p-2 transition-all duration-300 hover:border-primary/25 hover:shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
+          <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-border/60 bg-surface-2/70">
+            <Skeleton className="h-full w-full rounded-none bg-gradient-to-b from-primary/15 via-muted/35 to-muted/70" style={{ animationDelay: `${index * 40}ms` }} />
+            <div className="absolute left-2 top-2"><Skeleton className="h-5 w-16 rounded-full bg-primary/20" /></div>
+            <div className="absolute right-2 top-2"><Skeleton className="h-5 w-9 rounded-full bg-background/45" /></div>
+            <div className="absolute inset-x-0 bottom-0 space-y-2 bg-gradient-to-t from-black/45 to-transparent p-2">
+              <Skeleton className="h-3 w-4/5 rounded-full bg-white/20" />
+              <div className="flex gap-1">
+                <Skeleton className="h-4 w-10 rounded-full bg-white/15" />
+                <Skeleton className="h-4 w-12 rounded-full bg-white/10" />
+              </div>
+            </div>
+          </div>
+          <div className="mt-2 space-y-2">
+            <Skeleton className="h-3 w-4/5 rounded-full" />
+            <Skeleton className="h-2.5 w-3/5 rounded-full bg-muted/70" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MovieTableSkeleton() {
+  return (
+    <div className="px-5 py-4">
+      <div className="overflow-hidden rounded-lg border border-border bg-surface-2/15">
+        <table className="w-full text-xs">
+          <thead className="bg-surface-2 text-muted-foreground">
+            <tr className="text-left [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+              <th>Title</th><th>Year</th><th>Genre</th><th>Variants</th><th>Status</th><th>Rating</th><th className="text-right">Files</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {Array.from({ length: 7 }).map((_, index) => (
+              <tr key={`movie-row-skeleton-${index}`} className="[&>td]:px-3 [&>td]:py-3">
+                <td>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-9 w-7 rounded border border-border/60" style={{ animationDelay: `${index * 50}ms` }} />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <Skeleton className="h-3 w-36 rounded-full" />
+                      <Skeleton className="h-2.5 w-24 rounded-full bg-muted/70" />
+                    </div>
+                  </div>
+                </td>
+                <td><Skeleton className="h-3 w-10 rounded-full" /></td>
+                <td><Skeleton className="h-3 w-28 rounded-full" /></td>
+                <td><div className="flex gap-1"><Skeleton className="h-4 w-12 rounded-full" /><Skeleton className="h-4 w-10 rounded-full" /></div></td>
+                <td><Skeleton className="h-5 w-16 rounded-full" /></td>
+                <td><Skeleton className="ml-0 h-3 w-8 rounded-full" /></td>
+                <td className="text-right"><Skeleton className="ml-auto h-3 w-10 rounded-full" /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default function Movies() {
   const [view, setView] = useState<"grid" | "table">("grid");
@@ -84,7 +149,11 @@ export default function Movies() {
         <div className="ml-auto text-[11px] text-muted-foreground">{filtered.length} of {movies.length}</div>
       </div>
 
-      {view === "grid" ? (
+      {loading ? view === "grid" ? (
+        <MovieGridSkeleton />
+      ) : (
+        <MovieTableSkeleton />
+      ) : view === "grid" ? (
         <div className="grid grid-cols-2 gap-4 p-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {filtered.map((movie) => (
             <div key={movie.id} onClick={() => void openMovie(movie)} className="group cursor-pointer">
@@ -146,6 +215,11 @@ export default function Movies() {
                     <td className="text-right font-mono text-muted-foreground">{movie.downloads}</td>
                   </tr>
                 ))}
+                {!loading && filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">No movie records matched this view.</td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>

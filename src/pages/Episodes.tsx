@@ -3,7 +3,44 @@ import { Search } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { dashboardApi, type DashboardSeries } from "@/lib/dashboard-api";
+
+function EpisodesTableSkeleton() {
+  return (
+    <div className="px-5 py-4">
+      <div className="overflow-hidden rounded-lg border border-border bg-surface-2/15">
+        <table className="w-full text-xs">
+          <thead className="bg-surface-2 text-muted-foreground">
+            <tr className="text-left [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
+              <th>Series</th><th>S/E</th><th>Title</th><th>Runtime</th>
+              <th>Variants</th><th>Sources</th><th>Status</th><th className="text-right">Air date</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {Array.from({ length: 9 }).map((_, index) => (
+              <tr key={`episode-row-skeleton-${index}`} className="[&>td]:px-3 [&>td]:py-3">
+                <td>
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-6 rounded border border-border/60" style={{ animationDelay: `${index * 45}ms` }} />
+                    <Skeleton className="h-3 w-28 rounded-full" />
+                  </div>
+                </td>
+                <td><Skeleton className="h-3 w-14 rounded-full" /></td>
+                <td><Skeleton className="h-3 w-36 rounded-full" /></td>
+                <td><Skeleton className="h-3 w-10 rounded-full" /></td>
+                <td><Skeleton className="h-5 w-10 rounded-full" /></td>
+                <td><Skeleton className="h-3 w-8 rounded-full" /></td>
+                <td><Skeleton className="h-5 w-16 rounded-full" /></td>
+                <td className="text-right"><Skeleton className="ml-auto h-3 w-16 rounded-full" /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default function Episodes() {
   const [series, setSeries] = useState<DashboardSeries[]>([]);
@@ -85,7 +122,7 @@ export default function Episodes() {
         <div className="ml-auto text-[11px] text-muted-foreground">{loading ? "Loading..." : `${filtered.length} rows`}</div>
       </div>
       <div className="px-5 py-4">
-        <div className="overflow-hidden rounded-lg border border-border">
+        {loading ? <EpisodesTableSkeleton /> : <div className="overflow-hidden rounded-lg border border-border">
           <table className="w-full text-xs">
             <thead className="bg-surface-2 text-muted-foreground">
               <tr className="text-left [&>th]:px-3 [&>th]:py-2 [&>th]:font-medium">
@@ -120,7 +157,7 @@ export default function Episodes() {
               ) : null}
             </tbody>
           </table>
-        </div>
+        </div>}
       </div>
     </div>
   );

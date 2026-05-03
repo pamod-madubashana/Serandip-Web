@@ -60,6 +60,7 @@ export type DashboardSeries = {
         display_name: string;
         quality: string | null;
         codec: string | null;
+        empty: boolean;
         size: string;
         size_mb: number;
         source_count: number;

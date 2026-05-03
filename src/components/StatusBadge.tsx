@@ -11,6 +11,7 @@ const styles: Record<string, string> = {
   Pending: "bg-warning/15 text-warning border-warning/30",
   "In Progress": "bg-info/15 text-info border-info/30",
   Missing: "bg-danger/15 text-danger border-danger/30",
+  Empty: "bg-danger/12 text-danger border-danger/25",
   Suspended: "bg-danger/15 text-danger border-danger/30",
   Rejected: "bg-danger/15 text-danger border-danger/30",
   Ended: "bg-muted text-muted-foreground border-border",

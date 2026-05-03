@@ -328,9 +328,12 @@ export default function Series() {
                                           {episode.files.map((file) => (
                                             <div key={`${episode.id}-${file.id}-${file.display_name}`} className="flex items-center justify-between rounded border border-border/70 bg-background/50 px-2.5 py-2 text-[11px]">
                                               <div className="min-w-0">
-                                                <p className="truncate font-medium">{file.display_name}</p>
+                                                <div className="flex items-center gap-2">
+                                                  <p className="truncate font-medium">{file.display_name}</p>
+                                                  {file.empty ? <StatusBadge status="Empty" className="shrink-0" /> : null}
+                                                </div>
                                                 <p className="truncate font-mono text-muted-foreground">
-                                                  {file.quality || "Unknown"} • {file.codec || "Codec n/a"} • {file.size}
+                                                  {file.quality || "Unknown"} • {file.codec || "Codec n/a"} • {file.empty ? "Placeholder only" : file.size}
                                                 </p>
                                               </div>
                                               <span className="rounded bg-surface-3 px-1.5 py-px font-mono">{file.source_count}</span>

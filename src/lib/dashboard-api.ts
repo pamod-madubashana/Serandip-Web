@@ -133,6 +133,20 @@ export type DashboardRequests = {
   total: number;
 };
 
+export type DashboardLeechResponse = {
+  queued: boolean;
+  request_id: string;
+  title: string;
+  source: string;
+  status_chat: number;
+  match?: {
+    title: string;
+    year: string | null;
+    archive_url: string;
+    torrent_url: string;
+  };
+};
+
 async function api<T>(path: string): Promise<T> {
   const response = await fetch(path, {
     credentials: "include",
@@ -147,6 +161,30 @@ async function api<T>(path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+async function apiPost<T>(path: string, body?: unknown): Promise<T> {
+  const response = await fetch(path, {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!response.ok) {
+    let detail = `Request failed: ${response.status}`;
+    try {
+      const payload = await response.json() as { detail?: string };
+      if (payload?.detail) detail = payload.detail;
+    } catch {
+      // ignore json parse failure
+    }
+    throw new Error(detail);
+  }
+  return response.json() as Promise<T>;
+}
+
 export const dashboardApi = {
   overview: () => api<DashboardOverview>("/api/dashboard/overview"),
   movies: (search = "") => api<{ movies: DashboardMovie[]; total: number }>(`/api/dashboard/movies${search ? `?search=${encodeURIComponent(search)}` : ""}`),
@@ -155,4 +193,6 @@ export const dashboardApi = {
   seriesDetails: (id: string) => api<DashboardSeries>(`/api/dashboard/series/${id}`),
   users: () => api<DashboardUsers>("/api/dashboard/users"),
   requests: () => api<DashboardRequests>("/api/dashboard/requests"),
+  requestSearchLeech: (id: string) => apiPost<DashboardLeechResponse>(`/api/dashboard/requests/${id}/search-leech`),
+  requestManualLeech: (id: string, source: string, name?: string) => apiPost<DashboardLeechResponse>(`/api/dashboard/requests/${id}/manual-leech`, { source, name }),
 };

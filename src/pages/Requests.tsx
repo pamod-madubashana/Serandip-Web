@@ -11,31 +11,32 @@ export default function Requests() {
   const [data, setData] = useState<DashboardRequests | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [manualSources, setManualSources] = useState<Record<string, string>>({});
+  const [manualNames, setManualNames] = useState<Record<string, string>>({});
+
+  const loadRequests = async () => {
+    try {
+      const payload = await dashboardApi.requests();
+      setData(payload);
+      setError(null);
+    } catch {
+      setError("Could not load live request backlog data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadRequests = async () => {
-      try {
-        const payload = await dashboardApi.requests();
-        if (!cancelled) {
-          setData(payload);
-          setError(null);
-        }
-      } catch {
-        if (!cancelled) {
-          setError("Could not load live request backlog data.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadRequests();
+    void (async () => {
+      await loadRequests();
+      if (cancelled) return;
+    })();
     const interval = window.setInterval(() => {
-      void loadRequests();
+      if (!cancelled) void loadRequests();
     }, 30000);
 
     return () => {
@@ -46,6 +47,40 @@ export default function Requests() {
 
   const items = data?.items ?? [];
 
+  const runSearchLeech = async (requestId: string) => {
+    setBusyId(requestId);
+    setActionMessage(null);
+    try {
+      const payload = await dashboardApi.requestSearchLeech(requestId);
+      setActionMessage(`Queued legal torrent for ${payload.title}.`);
+      await loadRequests();
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Could not queue legal torrent.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const runManualLeech = async (requestId: string, fallbackName: string) => {
+    const source = (manualSources[requestId] ?? "").trim();
+    if (!source) {
+      setActionMessage("Paste a magnet link or torrent URL first.");
+      return;
+    }
+    setBusyId(requestId);
+    setActionMessage(null);
+    try {
+      const payload = await dashboardApi.requestManualLeech(requestId, source, (manualNames[requestId] ?? fallbackName).trim() || fallbackName);
+      setActionMessage(`Queued manual leech for ${payload.title}.`);
+      setManualSources((current) => ({ ...current, [requestId]: "" }));
+      await loadRequests();
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Could not queue manual leech.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -55,6 +90,7 @@ export default function Requests() {
       />
 
       {error ? <div className="px-5 pt-4 text-sm text-destructive">{error}</div> : null}
+      {actionMessage ? <div className="px-5 pt-2 text-sm text-muted-foreground">{actionMessage}</div> : null}
 
       {/* Kanban */}
       <div className="grid gap-3 p-5 xl:grid-cols-5">
@@ -81,6 +117,26 @@ export default function Requests() {
                         {r.votes > 200 && <Flame className="h-3 w-3 text-warning" />}
                         <ThumbsUp className="h-3 w-3" /> {r.votes}
                       </span>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <Button size="sm" className="w-full" variant="secondary" disabled={busyId === r.id} onClick={() => void runSearchLeech(r.id)}>
+                        Search & Leech
+                      </Button>
+                      <input
+                        value={manualSources[r.id] ?? ""}
+                        onChange={(event) => setManualSources((current) => ({ ...current, [r.id]: event.target.value }))}
+                        placeholder="Magnet or .torrent URL"
+                        className="w-full rounded-md border border-border bg-background px-2 py-1 text-[11px]"
+                      />
+                      <input
+                        value={manualNames[r.id] ?? ""}
+                        onChange={(event) => setManualNames((current) => ({ ...current, [r.id]: event.target.value }))}
+                        placeholder="Optional display name"
+                        className="w-full rounded-md border border-border bg-background px-2 py-1 text-[11px]"
+                      />
+                      <Button size="sm" className="w-full" disabled={busyId === r.id} onClick={() => void runManualLeech(r.id, r.title)}>
+                        Queue Manual Leech
+                      </Button>
                     </div>
                   </div>
                 ))}

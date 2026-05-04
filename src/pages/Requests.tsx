@@ -177,11 +177,11 @@ export default function Requests() {
       </div>
 
       <Dialog open={Boolean(selectedRequest)} onOpenChange={(open) => !open && setSelectedRequest(null)}>
-        <DialogContent className="max-w-3xl border-border bg-surface-1">
+        <DialogContent className="w-[min(96vw,1100px)] max-w-5xl overflow-hidden border-border bg-surface-1 p-0">
           {selectedRequest ? (
             <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-3">
+              <DialogHeader className="border-b border-border px-6 pb-4 pt-6">
+                <DialogTitle className="flex flex-wrap items-center gap-3 pr-8">
                   <span>{selectedRequest.title}</span>
                   <StatusBadge status={selectedRequest.status} />
                 </DialogTitle>
@@ -190,81 +190,83 @@ export default function Requests() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-border bg-surface-2/40 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold">Torrent Search</p>
-                        <p className="text-xs text-muted-foreground">Search Internet Archive results for this request.</p>
+              <div className="max-h-[calc(90vh-180px)] overflow-y-auto px-6 py-5">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_320px]">
+                  <div className="min-w-0 space-y-4">
+                    <div className="rounded-lg border border-border bg-surface-2/40 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">Torrent Search</p>
+                          <p className="text-xs text-muted-foreground">Search Internet Archive results for this request.</p>
+                        </div>
+                        <Button size="sm" variant="secondary" disabled={busyId === selectedRequest.id} onClick={() => void runSearchTorrent()}>
+                          <Search className="mr-1 h-3.5 w-3.5" /> Search Torrent
+                        </Button>
                       </div>
-                      <Button size="sm" variant="secondary" disabled={busyId === selectedRequest.id} onClick={() => void runSearchTorrent()}>
-                        <Search className="mr-1 h-3.5 w-3.5" /> Search Torrent
-                      </Button>
-                    </div>
-                    <div className="mt-3 max-h-72 space-y-2 overflow-y-auto">
-                      {selectedResults.map((result) => {
-                        const active = resolvedSource === result.torrent_url;
-                        return (
-                          <button
-                            key={result.torrent_url}
-                            type="button"
-                            onClick={() => {
-                              setSelectedSource((current) => ({ ...current, [selectedRequest.id]: result.torrent_url }));
-                              setManualNames((current) => ({ ...current, [selectedRequest.id]: result.label }));
-                            }}
-                            className={`w-full rounded-lg border p-3 text-left transition-smooth ${active ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40"}`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <p className="text-sm font-medium">{result.label}</p>
-                                <p className="mt-1 text-[11px] text-muted-foreground">{result.archive_url}</p>
+                      <div className="mt-3 max-h-[52vh] space-y-2 overflow-y-auto pr-1">
+                        {selectedResults.map((result) => {
+                          const active = resolvedSource === result.torrent_url;
+                          return (
+                            <button
+                              key={result.torrent_url}
+                              type="button"
+                              onClick={() => {
+                                setSelectedSource((current) => ({ ...current, [selectedRequest.id]: result.torrent_url }));
+                                setManualNames((current) => ({ ...current, [selectedRequest.id]: result.label }));
+                              }}
+                              className={`w-full min-w-0 rounded-lg border p-3 text-left transition-smooth ${active ? "border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40"}`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium leading-snug break-words">{result.label}</p>
+                                  <p className="mt-1 break-all text-[11px] text-muted-foreground">{result.archive_url}</p>
+                                </div>
+                                <span className="shrink-0 rounded bg-surface-3 px-1.5 py-px text-[10px] font-mono">torrent</span>
                               </div>
-                              <span className="rounded bg-surface-3 px-1.5 py-px text-[10px] font-mono">torrent</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                      {selectedResults.length === 0 ? <p className="py-8 text-center text-xs text-muted-foreground">No torrent searched yet.</p> : null}
+                            </button>
+                          );
+                        })}
+                        {selectedResults.length === 0 ? <p className="py-8 text-center text-xs text-muted-foreground">No torrent searched yet.</p> : null}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-border bg-surface-2/40 p-4">
-                    <p className="text-sm font-semibold">Leech Source</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Pick a searched torrent or paste a magnet or torrent URL manually.</p>
-                    <textarea
-                      value={manualSources[selectedRequest.id] ?? resolvedSource}
-                      onChange={(event) => {
-                        const value = event.target.value;
-                        setManualSources((current) => ({ ...current, [selectedRequest.id]: value }));
-                        setSelectedSource((current) => ({ ...current, [selectedRequest.id]: value }));
-                      }}
-                      placeholder="magnet:?xt=... or https://example.com/file.torrent"
-                      className="mt-3 min-h-28 w-full rounded-md border border-border bg-background px-3 py-2 text-xs"
-                    />
-                    <input
-                      value={manualNames[selectedRequest.id] ?? selectedRequest.title}
-                      onChange={(event) => setManualNames((current) => ({ ...current, [selectedRequest.id]: event.target.value }))}
-                      placeholder="Optional display name"
-                      className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-xs"
-                    />
-                  </div>
+                  <div className="min-w-0 space-y-4">
+                    <div className="rounded-lg border border-border bg-surface-2/40 p-4">
+                      <p className="text-sm font-semibold">Leech Source</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Pick a searched torrent or paste a magnet or torrent URL manually.</p>
+                      <textarea
+                        value={manualSources[selectedRequest.id] ?? resolvedSource}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setManualSources((current) => ({ ...current, [selectedRequest.id]: value }));
+                          setSelectedSource((current) => ({ ...current, [selectedRequest.id]: value }));
+                        }}
+                        placeholder="magnet:?xt=... or https://example.com/file.torrent"
+                        className="mt-3 min-h-32 w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs leading-relaxed"
+                      />
+                      <input
+                        value={manualNames[selectedRequest.id] ?? selectedRequest.title}
+                        onChange={(event) => setManualNames((current) => ({ ...current, [selectedRequest.id]: event.target.value }))}
+                        placeholder="Optional display name"
+                        className="mt-3 w-full rounded-md border border-border bg-background px-3 py-2 text-xs"
+                      />
+                    </div>
 
-                  <div className="rounded-lg border border-border bg-surface-2/40 p-4 text-xs text-muted-foreground">
-                    <p className="font-medium text-foreground">Request details</p>
-                    <div className="mt-3 space-y-2">
-                      <div className="flex items-center justify-between"><span>Requester</span><span className="font-mono">{selectedRequest.requester}</span></div>
-                      <div className="flex items-center justify-between"><span>Votes</span><span className="font-mono flex items-center gap-1">{selectedRequest.votes > 200 && <Flame className="h-3 w-3 text-warning" />}<ThumbsUp className="h-3 w-3" /> {selectedRequest.votes}</span></div>
-                      <div className="flex items-center justify-between"><span>Type</span><span className="font-mono">{selectedRequest.type}</span></div>
-                      <div className="flex items-center justify-between"><span>Date</span><span className="font-mono">{selectedRequest.date}</span></div>
+                    <div className="rounded-lg border border-border bg-surface-2/40 p-4 text-xs text-muted-foreground">
+                      <p className="font-medium text-foreground">Request details</p>
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center justify-between"><span>Requester</span><span className="font-mono">{selectedRequest.requester}</span></div>
+                        <div className="flex items-center justify-between"><span>Votes</span><span className="font-mono flex items-center gap-1">{selectedRequest.votes > 200 && <Flame className="h-3 w-3 text-warning" />}<ThumbsUp className="h-3 w-3" /> {selectedRequest.votes}</span></div>
+                        <div className="flex items-center justify-between"><span>Type</span><span className="font-mono">{selectedRequest.type}</span></div>
+                        <div className="flex items-center justify-between"><span>Date</span><span className="font-mono">{selectedRequest.date}</span></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <DialogFooter className="gap-2 sm:justify-between">
+              <DialogFooter className="border-t border-border px-6 py-4 sm:justify-between">
                 <Button variant="destructive" disabled={busyId === selectedRequest.id} onClick={() => void runReject()}>
                   <XCircle className="mr-1 h-3.5 w-3.5" /> Reject
                 </Button>

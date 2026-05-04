@@ -147,6 +147,25 @@ export type DashboardLeechResponse = {
   };
 };
 
+export type DashboardTorrentSearchResult = {
+  title: string;
+  year: string | null;
+  archive_url: string;
+  torrent_url: string;
+  label: string;
+};
+
+export type DashboardTorrentSearchResponse = {
+  query: string;
+  items: DashboardTorrentSearchResult[];
+};
+
+export type DashboardRequestStatusResponse = {
+  ok: boolean;
+  request_id: string;
+  status: string;
+};
+
 async function api<T>(path: string): Promise<T> {
   const response = await fetch(path, {
     credentials: "include",
@@ -193,6 +212,7 @@ export const dashboardApi = {
   seriesDetails: (id: string) => api<DashboardSeries>(`/api/dashboard/series/${id}`),
   users: () => api<DashboardUsers>("/api/dashboard/users"),
   requests: () => api<DashboardRequests>("/api/dashboard/requests"),
-  requestSearchLeech: (id: string) => apiPost<DashboardLeechResponse>(`/api/dashboard/requests/${id}/search-leech`),
-  requestManualLeech: (id: string, source: string, name?: string) => apiPost<DashboardLeechResponse>(`/api/dashboard/requests/${id}/manual-leech`, { source, name }),
+  requestSearchTorrents: (id: string) => api<DashboardTorrentSearchResponse>(`/api/dashboard/requests/${id}/search-torrents`),
+  requestStartLeech: (id: string, source: string, name?: string) => apiPost<DashboardLeechResponse>(`/api/dashboard/requests/${id}/start-leech`, { source, name }),
+  requestSetStatus: (id: string, status: string) => apiPost<DashboardRequestStatusResponse>(`/api/dashboard/requests/${id}/status`, { status }),
 };

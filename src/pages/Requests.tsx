@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { dashboardApi, type DashboardRequests } from "@/lib/dashboard-api";
 import { Flame, ThumbsUp } from "lucide-react";
 
-const columns = ["Pending", "In Progress", "Fulfilled", "Rejected"] as const;
+const columns = ["Pending", "Leeching", "Uploading", "Finished", "Reject"] as const;
 
 export default function Requests() {
   const [data, setData] = useState<DashboardRequests | null>(null);
@@ -57,7 +57,7 @@ export default function Requests() {
       {error ? <div className="px-5 pt-4 text-sm text-destructive">{error}</div> : null}
 
       {/* Kanban */}
-      <div className="grid gap-3 p-5 lg:grid-cols-4">
+      <div className="grid gap-3 p-5 xl:grid-cols-5">
         {columns.map((col) => {
           const columnItems = items.filter((r) => r.status === col);
           return (

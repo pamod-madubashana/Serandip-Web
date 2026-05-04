@@ -115,6 +115,8 @@ export type DashboardUsers = {
     watched: number;
     requests: number;
     status: string;
+    profile_picture?: string;
+    avatar_url?: string;
   }[];
 };
 

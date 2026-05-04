@@ -44,6 +44,11 @@ export default function Users() {
   const summary = data?.summary;
   const items = data?.items ?? [];
 
+  const initials = (name: string) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    return (parts[0]?.[0] ?? "U") + (parts[1]?.[0] ?? "");
+  };
+
   return (
     <div>
       <PageHeader
@@ -85,7 +90,18 @@ export default function Users() {
                 <tr key={u.id} className="transition-smooth hover:bg-surface-2/50 [&>td]:px-3 [&>td]:py-2">
                   <td>
                     <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-full bg-gradient-primary" />
+                      {u.avatar_url ? (
+                        <img
+                          src={u.avatar_url}
+                          alt={u.name}
+                          className="h-7 w-7 rounded-full bg-surface-3 object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-primary text-[10px] font-semibold text-primary-foreground">
+                          {initials(u.name)}
+                        </div>
+                      )}
                       <div>
                         <p className="font-medium">{u.name}</p>
                         <p className="text-[10px] text-muted-foreground font-mono">{u.handle}</p>
